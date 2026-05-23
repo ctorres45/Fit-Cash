@@ -2,7 +2,7 @@ let carrito = [];
 let modalProducto = {};
 
 // ===== PRODUCTOS =====
-async function cargarProductos() {
+function cargarProductos() {
 
   const productos = [
 
@@ -72,36 +72,52 @@ async function cargarProductos() {
 
   contenedor.innerHTML = "";
 
-  productos.forEach(p => {
+  productos.forEach(producto => {
 
     contenedor.innerHTML += `
 
       <div class="producto">
 
         <img 
-          src="${p.imagen}" 
-          alt="${p.nombre}"
-          onclick="abrirModal('${p.nombre}', ${p.precio}, '${p.imagen}')"
+          src="${producto.imagen}" 
+          alt="${producto.nombre}"
+          onclick="abrirModal(
+            '${producto.nombre}', 
+            ${producto.precio}, 
+            '${producto.imagen}'
+          )"
         >
 
-        <h3>${p.nombre}</h3>
+        <h3>${producto.nombre}</h3>
 
-        <p>$${p.precio.toLocaleString()}</p>
+        <p>$${producto.precio.toLocaleString()}</p>
 
-        <button onclick="agregarAlCarrito('${p.nombre}', ${p.precio}, '${p.imagen}')">
+        <button 
+          onclick="agregarAlCarrito(
+            '${producto.nombre}', 
+            ${producto.precio}, 
+            '${producto.imagen}'
+          )"
+        >
           🛒 Agregar al carrito
         </button>
 
       </div>
 
     `;
+
   });
+
 }
 
 // ===== MODAL =====
 function abrirModal(nombre, precio, imagen) {
 
-  modalProducto = { nombre, precio, imagen };
+  modalProducto = {
+    nombre,
+    precio,
+    imagen
+  };
 
   document.getElementById("modal-img").src = imagen;
 
@@ -112,12 +128,14 @@ function abrirModal(nombre, precio, imagen) {
 
   document.getElementById("modal-imagen")
     .classList.add("activo");
+
 }
 
 function cerrarModal() {
 
   document.getElementById("modal-imagen")
     .classList.remove("activo");
+
 }
 
 function modalAgregar() {
@@ -129,16 +147,18 @@ function modalAgregar() {
   );
 
   cerrarModal();
+
 }
 
 // ===== CARRITO =====
 function agregarAlCarrito(nombre, precio, imagen) {
 
-  const existente = carrito.find(i => i.nombre === nombre);
+  const productoExistente =
+    carrito.find(item => item.nombre === nombre);
 
-  if (existente) {
+  if (productoExistente) {
 
-    existente.cantidad++;
+    productoExistente.cantidad++;
 
   } else {
 
@@ -148,78 +168,95 @@ function agregarAlCarrito(nombre, precio, imagen) {
       imagen,
       cantidad: 1
     });
+
   }
 
   actualizarCarrito();
   abrirCarrito();
+
 }
 
-function cambiarCantidad(nombre, delta) {
+function cambiarCantidad(nombre, cambio) {
 
-  const item = carrito.find(i => i.nombre === nombre);
+  const item =
+    carrito.find(producto => producto.nombre === nombre);
 
   if (!item) return;
 
-  item.cantidad += delta;
+  item.cantidad += cambio;
 
   if (item.cantidad <= 0) {
 
-    carrito = carrito.filter(i => i.nombre !== nombre);
+    carrito =
+      carrito.filter(producto => producto.nombre !== nombre);
+
   }
 
   actualizarCarrito();
+
 }
 
 function eliminarItem(nombre) {
 
-  carrito = carrito.filter(i => i.nombre !== nombre);
+  carrito =
+    carrito.filter(producto => producto.nombre !== nombre);
 
   actualizarCarrito();
+
 }
 
 function actualizarCarrito() {
 
-  const lista = document.getElementById("lista-carrito");
+  const listaCarrito =
+    document.getElementById("lista-carrito");
 
-  const contador =
+  const contadorCarrito =
     document.getElementById("contador-carrito");
 
-  const subtotalEl =
+  const subtotalElemento =
     document.getElementById("subtotal");
 
-  const totalEl =
+  const totalElemento =
     document.getElementById("total");
 
-  const totalItems =
-    carrito.reduce((sum, i) => sum + i.cantidad, 0);
+  const totalProductos =
+    carrito.reduce((total, item) => total + item.cantidad, 0);
 
-  const total =
-    carrito.reduce((sum, i) =>
-      sum + i.precio * i.cantidad, 0);
+  const totalCompra =
+    carrito.reduce(
+      (total, item) =>
+        total + (item.precio * item.cantidad),
+      0
+    );
 
-  contador.textContent = totalItems;
+  contadorCarrito.textContent = totalProductos;
 
-  subtotalEl.textContent =
-    `$${total.toLocaleString()}`;
+  subtotalElemento.textContent =
+    `$${totalCompra.toLocaleString()}`;
 
-  totalEl.textContent =
-    `$${total.toLocaleString()}`;
+  totalElemento.textContent =
+    `$${totalCompra.toLocaleString()}`;
 
   if (carrito.length === 0) {
 
-    lista.innerHTML =
-      `<p class="carrito-vacio">
+    listaCarrito.innerHTML = `
+      <p class="carrito-vacio">
         Tu carrito está vacío 😢
-      </p>`;
+      </p>
+    `;
 
     return;
+
   }
 
-  lista.innerHTML = carrito.map(item => `
+  listaCarrito.innerHTML = carrito.map(item => `
 
     <div class="carrito-item">
 
-      <img src="${item.imagen}" alt="${item.nombre}">
+      <img 
+        src="${item.imagen}" 
+        alt="${item.nombre}"
+      >
 
       <div class="carrito-item-info">
 
@@ -229,13 +266,17 @@ function actualizarCarrito() {
 
         <div class="carrito-item-controles">
 
-          <button onclick="cambiarCantidad('${item.nombre}', -1)">
+          <button 
+            onclick="cambiarCantidad('${item.nombre}', -1)"
+          >
             −
           </button>
 
           <span>${item.cantidad}</span>
 
-          <button onclick="cambiarCantidad('${item.nombre}', 1)">
+          <button 
+            onclick="cambiarCantidad('${item.nombre}', 1)"
+          >
             +
           </button>
 
@@ -253,9 +294,10 @@ function actualizarCarrito() {
     </div>
 
   `).join("");
+
 }
 
-// ===== ABRIR Y CERRAR =====
+// ===== ABRIR Y CERRAR CARRITO =====
 function abrirCarrito() {
 
   document.getElementById("carrito-drawer")
@@ -263,6 +305,7 @@ function abrirCarrito() {
 
   document.getElementById("overlay")
     .classList.add("activo");
+
 }
 
 function cerrarCarrito() {
@@ -272,6 +315,7 @@ function cerrarCarrito() {
 
   document.getElementById("overlay")
     .classList.remove("activo");
+
 }
 
 // ===== WHATSAPP =====
@@ -279,36 +323,52 @@ function irAWhatsApp() {
 
   if (carrito.length === 0) {
 
-    alert("Agrega productos al carrito");
+    alert("Agrega productos al carrito primero");
 
     return;
+
   }
 
-  const total = carrito.reduce(
-    (sum, i) => sum + i.precio * i.cantidad,
-    0
-  );
+  const total =
+    carrito.reduce(
+      (suma, item) =>
+        suma + (item.precio * item.cantidad),
+      0
+    );
 
-  const itemsTexto = carrito.map(i =>
-    `• ${i.nombre} x${i.cantidad} - $${(i.precio * i.cantidad).toLocaleString()}`
-  ).join("\n");
+  const productosMensaje =
+    carrito.map(item => {
+
+      return `• ${item.nombre} x${item.cantidad} - $${(
+        item.precio * item.cantidad
+      ).toLocaleString()}`;
+
+    }).join("\n");
 
   const mensaje =
-    `Hola! Quiero hacer un pedido:\n\n${itemsTexto}\n\nTotal: $${total.toLocaleString()}`;
+`Hola 👋
+Quiero realizar el siguiente pedido:
+
+${productosMensaje}
+
+💰 Total: $${total.toLocaleString()}`;
 
   window.open(
     `https://wa.me/573116408358?text=${encodeURIComponent(mensaje)}`,
     "_blank"
   );
+
 }
 
-// ===== ESC =====
-document.addEventListener("keydown", e => {
+// ===== CERRAR MODAL CON ESC =====
+document.addEventListener("keydown", evento => {
 
-  if (e.key === "Escape") {
+  if (evento.key === "Escape") {
 
     cerrarModal();
+
   }
+
 });
 
 // ===== INICIAR =====
